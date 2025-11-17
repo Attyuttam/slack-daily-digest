@@ -6,4 +6,4 @@ COPY . .
 RUN chmod +x mvnw
 RUN ./mvnw -q -DskipTests package
 
-CMD ["java", "-jar", "target/*.jar"]
+CMD java -jar target/*.jar
