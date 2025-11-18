@@ -4,6 +4,7 @@ import com.slackapp.dailydigestbot.application.digest.SlackDigestService;
 import com.slackapp.dailydigestbot.application.SlackSignatureVerifier;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,6 +13,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/slack")
@@ -40,7 +42,7 @@ public class SlackController {
         if (!verifier.verify(signingSecret, timestamp, body, sig)) {
             return ResponseEntity.status(401).body("invalid signature");
         }
-
+        log.info("ACTION=REQUEST_RECEIVED TEXT={} CHANNEL_ID={} USER_NAME={} BODY={}",request.getParameter("text"),request.getParameter("channel_id"),request.getParameter("user_name"),body);
         // Parse form body (application/x-www-form-urlencoded)
         Map<String, String> params = java.util.Arrays.stream(body.split("&"))
             .map(s -> s.split("=", 2))
