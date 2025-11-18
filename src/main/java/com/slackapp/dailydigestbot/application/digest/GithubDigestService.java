@@ -41,8 +41,8 @@ public class GithubDigestService {
     //-----------------------------------------------------
     public JsonNode getOpenPRsCreatedBy(String username, String repo) {
         String url = String.format(
-                "https://api.github.com/repos/%s/pulls?state=open",
-                repo
+                "https://api.github.com/repos/%s/%s/pulls?state=open",
+                username,repo
         );
 
         HttpEntity<Void> e = new HttpEntity<>(githubHeaders);
@@ -61,8 +61,8 @@ public class GithubDigestService {
     //-----------------------------------------------------
     public JsonNode getPRsToReview(String username, String repo) {
         String url = String.format(
-                "https://api.github.com/repos/%s/pulls?state=open",
-                repo
+                "https://api.github.com/repos/%s/%s/pulls?state=open",
+                username,repo
         );
 
         HttpEntity<Void> e = new HttpEntity<>(githubHeaders);
@@ -83,8 +83,8 @@ public class GithubDigestService {
     //-----------------------------------------------------
     public JsonNode getAssignedIssues(String username, String repo) {
         String url = String.format(
-                "https://api.github.com/repos/%s/issues?state=open&assignee=%s",
-                repo, username
+                "https://api.github.com/repos/%s/%s/issues?state=open&assignee=%s",
+                username, repo, username
         );
 
         HttpEntity<Void> e = new HttpEntity<>(githubHeaders);
@@ -98,8 +98,8 @@ public class GithubDigestService {
     //-----------------------------------------------------
     public JsonNode getIssuesCreatedBy(String username, String repo) {
         String url = String.format(
-                "https://api.github.com/repos/%s/issues?state=open&creator=%s",
-                repo, username
+                "https://api.github.com/repos/%s/%s/issues?state=open&creator=%s",
+                username,repo, username
         );
 
         HttpEntity<Void> e = new HttpEntity<>(githubHeaders);
