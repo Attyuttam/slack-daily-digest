@@ -7,6 +7,7 @@ import com.slackapp.dailydigestbot.application.SlackSignatureVerifier;
 import com.slackapp.dailydigestbot.application.llm.GithubSummarizer;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -19,6 +20,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/github")
@@ -44,7 +46,7 @@ public class GithubController {
         if (!verifier.verify(signingSecret, timestamp, body, signature)) {
             return ResponseEntity.status(401).body("invalid signature");
         }
-
+        log.info("ACTION=REQUEST_RECEIVED REQUEST={}",request);
         // 2. Parse Slack form payload
         String text = request.getParameter("text");     // text typed after the slash command
         String channelId = request.getParameter("channel_id");

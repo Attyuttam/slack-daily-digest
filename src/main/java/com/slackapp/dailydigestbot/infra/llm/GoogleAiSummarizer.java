@@ -11,7 +11,7 @@ import java.io.IOException;
 import java.util.*;
 
 @Service
-public class GoogleAiSlackSummarizer implements SummarizerClient {
+public class GoogleAiSummarizer implements SummarizerClient {
 
     @Value("${llm.google-api-key}")
     private String apiKey;
