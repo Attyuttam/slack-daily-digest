@@ -42,14 +42,12 @@ public class SlackController {
         if (!verifier.verify(signingSecret, timestamp, body, sig)) {
             return ResponseEntity.status(401).body("invalid signature");
         }
-        log.info("ACTION=REQUEST_RECEIVED TEXT={} CHANNEL_ID={} USER_NAME={} BODY={}",request.getParameter("text"),request.getParameter("channel_id"),request.getParameter("user_name"),body);
         // Parse form body (application/x-www-form-urlencoded)
         Map<String, String> params = java.util.Arrays.stream(body.split("&"))
             .map(s -> s.split("=", 2))
             .collect(Collectors.toMap(a -> urlDecode(a[0]), a -> urlDecode(a.length > 1 ? a[1] : "")));
 
         String channelId = params.getOrDefault("channel_id", null);
-        String userId = params.getOrDefault("user_id", null);
 
         // immediate response to Slack (ack)
         // we send ephemeral response acknowledging receipt:

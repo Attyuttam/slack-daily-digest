@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.BufferedReader;
+import java.nio.charset.StandardCharsets;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
@@ -46,11 +48,16 @@ public class GithubController {
         if (!verifier.verify(signingSecret, timestamp, body, signature)) {
             return ResponseEntity.status(401).body("invalid signature");
         }
-        log.info("ACTION=REQUEST_RECEIVED TEXT={} CHANNEL_ID={} USER_NAME={} BODY={}",request.getParameter("text"),request.getParameter("channel_id"),request.getParameter("user_name"),body);
         // 2. Parse Slack form payload
-        String text = request.getParameter("text");     // text typed after the slash command
-        String channelId = request.getParameter("channel_id");
-        String slackUserName = request.getParameter("user_name");
+        // Parse form body (application/x-www-form-urlencoded)
+        Map<String, String> params = java.util.Arrays.stream(body.split("&"))
+                .map(s -> s.split("=", 2))
+                .collect(Collectors.toMap(a -> urlDecode(a[0]), a -> urlDecode(a.length > 1 ? a[1] : "")));
+
+
+        String text = params.getOrDefault("text",null);     // text typed after the slash command
+        String channelId = params.getOrDefault("channel_id",null);
+        String slackUserName = params.getOrDefault("user_name",null);
 
         // Example: "john org/repo"
         String[] parts = text.split("\\s+");
@@ -72,5 +79,9 @@ public class GithubController {
         // Slack requires a response within 3 seconds
         return ResponseEntity.ok("Generating GitHub digest...");
     }
-
+    private static String urlDecode(String s) {
+        try {
+            return java.net.URLDecoder.decode(s, StandardCharsets.UTF_8);
+        } catch (Exception e) { return s; }
+    }
 }
