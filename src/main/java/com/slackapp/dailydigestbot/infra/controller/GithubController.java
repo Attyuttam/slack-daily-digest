@@ -46,7 +46,7 @@ public class GithubController {
         if (!verifier.verify(signingSecret, timestamp, body, signature)) {
             return ResponseEntity.status(401).body("invalid signature");
         }
-        log.info("ACTION=REQUEST_RECEIVED REQUEST={}",request.getParameterMap().toString());
+        log.info("ACTION=REQUEST_RECEIVED TEXT={} CHANNEL_ID={} USER_NAME={}",request.getParameter("text"),request.getParameter("channel_id"),request.getParameter("user_name"));
         // 2. Parse Slack form payload
         String text = request.getParameter("text");     // text typed after the slash command
         String channelId = request.getParameter("channel_id");
