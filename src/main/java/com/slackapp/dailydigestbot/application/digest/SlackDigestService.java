@@ -1,7 +1,8 @@
-package com.slackapp.dailydigestbot.application;
+package com.slackapp.dailydigestbot.application.digest;
 
 import com.slack.api.model.Message;
-import com.slackapp.dailydigestbot.application.llm.Summarizer;
+import com.slackapp.dailydigestbot.application.SlackClientService;
+import com.slackapp.dailydigestbot.application.llm.SlackSummarizer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -11,10 +12,10 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class DigestService {
+public class SlackDigestService {
 
     private final SlackClientService slackClient;
-    private final Summarizer summarizer;
+    private final SlackSummarizer slackSummarizer;
 
     @Value("${slack-bot.default.digest-channel}")
     private String defaultChannel;
@@ -53,9 +54,9 @@ public class DigestService {
             return;
         }
 
-        // 3) Summarize with OpenAI
+        // 3) Summarize with LLM
         String title = "Digest for channel " + channelId;
-        String summary = summarizer.summarizeMessages(title, textMessages);
+        String summary = slackSummarizer.summarizeMessages(title, textMessages);
 
         // 4) Post summary
         String finalMessage = "🔔 *Daily Digest*\n\n" + summary;

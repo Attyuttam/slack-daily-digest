@@ -2,7 +2,7 @@ package com.slackapp.dailydigestbot.infra.llm;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.slackapp.dailydigestbot.application.llm.Summarizer;
+import com.slackapp.dailydigestbot.application.llm.SummarizerClient;
 import okhttp3.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -11,7 +11,7 @@ import java.io.IOException;
 import java.util.*;
 
 @Service
-public class GoogleAiSummarizer implements Summarizer {
+public class GoogleAiSlackSummarizer implements SummarizerClient {
 
     @Value("${llm.google-api-key}")
     private String apiKey;
@@ -23,16 +23,7 @@ public class GoogleAiSummarizer implements Summarizer {
     private final ObjectMapper mapper = new ObjectMapper();
 
     @Override
-    public String summarizeMessages(String title, List<String> messages) {
-
-        // Limit number of messages to avoid large payloads
-        List<String> truncated =
-                messages.size() > 30
-                        ? messages.subList(messages.size() - 30, messages.size())
-                        : messages;
-
-        String prompt = buildPrompt(title, truncated);
-
+    public String summarize(String prompt) {
         // Gemini expects request format:
         //
         // {
@@ -102,33 +93,5 @@ public class GoogleAiSummarizer implements Summarizer {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    private String buildPrompt(String title, List<String> messages) {
-        StringBuilder b = new StringBuilder();
-        b.append("Create a concise, high-signal Slack channel digest.\n");
-        b.append("Title: ").append(title).append("\n\n");
-        b.append("Messages:\n");
-        for (String m : messages) {
-            b.append("- ").append(m).append("\n");
-        }
-
-        b.append("""
-                
-                ---
-                Produce the digest in 3 short sections:
-                1) **Key Updates** — major points only, in bullets.
-                2) **Action Items** — specify WHO and WHAT clearly.
-                3) **Blockers / Questions** — only if relevant.
-                
-                Rules:
-                - Max 6 bullets total
-                - Avoid fluff
-                - Convert vague statements into concrete items
-                
-                Begin:
-                """);
-
-        return b.toString();
     }
 }

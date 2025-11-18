@@ -1,7 +1,6 @@
 package com.slackapp.dailydigestbot.infra.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.slackapp.dailydigestbot.application.DigestService;
+import com.slackapp.dailydigestbot.application.digest.SlackDigestService;
 import com.slackapp.dailydigestbot.application.SlackSignatureVerifier;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -12,8 +11,6 @@ import java.io.BufferedReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 @RestController
 @RequiredArgsConstructor
@@ -21,21 +18,18 @@ import java.util.concurrent.Executors;
 public class SlackController {
 
     private final SlackSignatureVerifier verifier;
-    private final DigestService digestService;
-    private final ObjectMapper mapper;
-
-    private final ExecutorService executor = Executors.newCachedThreadPool();
+    private final SlackDigestService slackDigestService;
 
     @Value("${slack-bot.signing.secret}")
     private String signingSecret;
 
     @GetMapping("/test-digest")
     public String testDigest(){
-        digestService.testSendMessage();
+        slackDigestService.testSendMessage();
         return "sent";
     }
     @PostMapping("/digest")
-    public ResponseEntity<String> handleDigestSlash(HttpServletRequest request,
+    public ResponseEntity<String> handleSlackDigestSlash(HttpServletRequest request,
                                                     @RequestHeader("X-Slack-Request-Timestamp") String timestamp,
                                                     @RequestHeader("X-Slack-Signature") String sig) throws Exception {
         String body;
@@ -61,7 +55,7 @@ public class SlackController {
         new Thread(() -> {
             // asynchronously create and send digest (so we can reply quickly)
             try {
-                digestService.generateAndSendDigestToChannel(channelId);
+                slackDigestService.generateAndSendDigestToChannel(channelId);
             } catch (Exception e) {
                 e.printStackTrace();
             }
