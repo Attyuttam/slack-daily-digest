@@ -30,6 +30,8 @@
 		<java.version>17</java.version>
 		<org.projectlombok.version>1.18.42</org.projectlombok.version>
 	</properties>
+
+	
 	<dependencies>
 		<!-- https://mvnrepository.com/artifact/org.projectlombok/lombok -->
 		<dependency>
