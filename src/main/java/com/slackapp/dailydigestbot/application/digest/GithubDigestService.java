@@ -23,27 +23,31 @@ public class GithubDigestService {
     private final SlackClientService slackClientService;
 
     public void generateAndSendDigestToChannel(String githubUser, String repo, String channelId) throws Exception {
-        // 1. Fetch GitHub data
-        JsonNode created = getOpenPRsCreatedBy(githubUser, repo);
-        JsonNode review = getPRsToReview(githubUser, repo);
-        JsonNode assigned = getAssignedIssues(githubUser, repo);
-        JsonNode createdIssues = getIssuesCreatedBy(githubUser, repo);
+        try {
+            // 1. Fetch GitHub data
+            JsonNode created = getOpenPRsCreatedBy(githubUser, repo);
+            JsonNode review = getPRsToReview(githubUser, repo);
+            JsonNode assigned = getAssignedIssues(githubUser, repo);
+            JsonNode createdIssues = getIssuesCreatedBy(githubUser, repo);
 
-        // 2. Summarize with AI
-        String summary = githubSummarizer.summarizeMessages(created, review, assigned, createdIssues);
+            // 2. Summarize with AI
+            String summary = githubSummarizer.summarizeMessages(created, review, assigned, createdIssues);
 
-        // 3. Post directly to Slack
-        slackClientService.postMessage(channelId, summary);
+            // 3. Post directly to Slack
+            slackClientService.postMessage(channelId, summary);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            slackClientService.postMessage(channelId, "Failed to generate digest because of :" + ex.getMessage());
+        }
     }
 
-    //-----------------------------------------------------
+    // -----------------------------------------------------
     // 1. Pull requests created by user (NOT MERGED)
-    //-----------------------------------------------------
+    // -----------------------------------------------------
     public JsonNode getOpenPRsCreatedBy(String username, String repo) {
         String url = String.format(
                 "https://api.github.com/repos/%s/%s/pulls?state=open",
-                username,repo
-        );
+                username, repo);
 
         HttpEntity<Void> e = new HttpEntity<>(githubHeaders);
         ResponseEntity<JsonNode> res = restTemplate.exchange(url, HttpMethod.GET, e, JsonNode.class);
@@ -56,14 +60,13 @@ public class GithubDigestService {
         return filtered;
     }
 
-    //-----------------------------------------------------
+    // -----------------------------------------------------
     // 2. Pull requests requiring this user as reviewer
-    //-----------------------------------------------------
+    // -----------------------------------------------------
     public JsonNode getPRsToReview(String username, String repo) {
         String url = String.format(
                 "https://api.github.com/repos/%s/%s/pulls?state=open",
-                username,repo
-        );
+                username, repo);
 
         HttpEntity<Void> e = new HttpEntity<>(githubHeaders);
         ResponseEntity<JsonNode> res = restTemplate.exchange(url, HttpMethod.GET, e, JsonNode.class);
@@ -78,14 +81,13 @@ public class GithubDigestService {
         return filtered;
     }
 
-    //-----------------------------------------------------
+    // -----------------------------------------------------
     // 3. Issues assigned to user
-    //-----------------------------------------------------
+    // -----------------------------------------------------
     public JsonNode getAssignedIssues(String username, String repo) {
         String url = String.format(
                 "https://api.github.com/repos/%s/%s/issues?state=open&assignee=%s",
-                username, repo, username
-        );
+                username, repo, username);
 
         HttpEntity<Void> e = new HttpEntity<>(githubHeaders);
         ResponseEntity<JsonNode> res = restTemplate.exchange(url, HttpMethod.GET, e, JsonNode.class);
@@ -93,14 +95,13 @@ public class GithubDigestService {
         return res.getBody();
     }
 
-    //-----------------------------------------------------
+    // -----------------------------------------------------
     // 4. Issues created by the user
-    //-----------------------------------------------------
+    // -----------------------------------------------------
     public JsonNode getIssuesCreatedBy(String username, String repo) {
         String url = String.format(
                 "https://api.github.com/repos/%s/%s/issues?state=open&creator=%s",
-                username,repo, username
-        );
+                username, repo, username);
 
         HttpEntity<Void> e = new HttpEntity<>(githubHeaders);
         return restTemplate.exchange(url, HttpMethod.GET, e, JsonNode.class).getBody();

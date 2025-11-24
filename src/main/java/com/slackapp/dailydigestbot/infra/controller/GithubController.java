@@ -2,7 +2,6 @@ package com.slackapp.dailydigestbot.infra.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.slackapp.dailydigestbot.application.digest.GithubDigestService;
-import com.slackapp.dailydigestbot.application.SlackClientService;
 import com.slackapp.dailydigestbot.application.SlackSignatureVerifier;
 import com.slackapp.dailydigestbot.application.llm.GithubSummarizer;
 import jakarta.servlet.http.HttpServletRequest;
@@ -18,10 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.io.BufferedReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
-
 @Slf4j
 @RestController
 @RequiredArgsConstructor
@@ -36,8 +32,7 @@ public class GithubController {
     public ResponseEntity<String> handleGithubDigestSlash(
             HttpServletRequest request,
             @RequestHeader("X-Slack-Request-Timestamp") String timestamp,
-            @RequestHeader("X-Slack-Signature") String signature
-    ) throws Exception {
+            @RequestHeader("X-Slack-Signature") String signature) throws Exception {
 
         // 1. Verify Slack signature
         String body;
@@ -54,10 +49,9 @@ public class GithubController {
                 .map(s -> s.split("=", 2))
                 .collect(Collectors.toMap(a -> urlDecode(a[0]), a -> urlDecode(a.length > 1 ? a[1] : "")));
 
-
-        String text = params.getOrDefault("text",null);     // text typed after the slash command
-        String channelId = params.getOrDefault("channel_id",null);
-        String slackUserName = params.getOrDefault("user_name",null);
+        String text = params.getOrDefault("text", null); // text typed after the slash command
+        String channelId = params.getOrDefault("channel_id", null);
+        String slackUserName = params.getOrDefault("user_name", null);
 
         // Example: "john org/repo"
         String[] parts = text.split("\\s+");
@@ -70,7 +64,7 @@ public class GithubController {
         new Thread(() -> {
             // asynchronously create and send digest (so we can reply quickly)
             try {
-                githubDigestService.generateAndSendDigestToChannel(githubUser,repo,channelId);
+                githubDigestService.generateAndSendDigestToChannel(githubUser, repo, channelId);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -79,9 +73,12 @@ public class GithubController {
         // Slack requires a response within 3 seconds
         return ResponseEntity.ok("Generating GitHub digest...");
     }
+
     private static String urlDecode(String s) {
         try {
             return java.net.URLDecoder.decode(s, StandardCharsets.UTF_8);
-        } catch (Exception e) { return s; }
+        } catch (Exception e) {
+            return s;
+        }
     }
 }
